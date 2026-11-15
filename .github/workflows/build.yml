@@ -1,0 +1,60 @@
+name: Multiplatform Build
+
+on:
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: Build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            artifact_name: android-mirror-windows-x86_64
+            bin_path: target/release/android-mirror-app.exe
+          - os: ubuntu-latest
+            artifact_name: android-mirror-linux-x86_64
+            bin_path: target/release/android-mirror-app
+          - os: macos-latest
+            artifact_name: android-mirror-macos-arm64
+            bin_path: target/release/android-mirror-app
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Cargo registry & target
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Install Linux build dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pkg-config libxkbcommon-dev libwayland-dev libgl1-mesa-dev libvulkan1
+
+      - name: Cargo check
+        run: cargo check
+
+      - name: Build release
+        run: cargo build --release
+
+      - name: Upload release binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: ${{ matrix.bin_path }}
+          if-no-files-found: error

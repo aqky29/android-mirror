@@ -1,0 +1,18 @@
+[package]
+name = "android-mirror-app"
+version = "0.1.0"
+edition = "2024"
+description = "Minimalist cross-platform GUI app for Android screen mirroring via ADB and scrcpy, built with Rust & Rune"
+license = "MIT"
+repository = "https://github.com/aqky29/android-mirror"
+
+[dependencies]
+rune = { git = "https://github.com/anomalyco/rune", rev = "615f06a43a565c4d9abe2d883b12fcd895421f4e" }
+rune-kit = { git = "https://github.com/anomalyco/rune", rev = "615f06a43a565c4d9abe2d883b12fcd895421f4e" }
+
+[patch.crates-io]
+wgpu-hal = { git = "https://github.com/anomalyco/rune", rev = "615f06a43a565c4d9abe2d883b12fcd895421f4e" }
+winit = { git = "https://github.com/anomalyco/rune", rev = "615f06a43a565c4d9abe2d883b12fcd895421f4e" }
+parley_engine = { git = "https://github.com/anomalyco/rune", rev = "615f06a43a565c4d9abe2d883b12fcd895421f4e" }
+accesskit_windows = { git = "https://github.com/anomalyco/rune", rev = "615f06a43a565c4d9abe2d883b12fcd895421f4e" }
+accesskit_macos = { git = "https://github.com/anomalyco/rune", rev = "615f06a43a565c4d9abe2d883b12fcd895421f4e" }

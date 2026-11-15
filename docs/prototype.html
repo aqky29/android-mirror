@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Android Mirror — Minimalist Dark Prototype</title>
+  <style>
+    :root {
+      --bg-canvas: #060709;
+      --bg-window: #0d0e12;
+      --bg-card: #13151b;
+      --bg-card-hover: #181b23;
+      --bg-inset: #0a0b0e;
+      --border: rgba(255, 255, 255, 0.065);
+      --border-strong: rgba(255, 255, 255, 0.13);
+      --sheen: inset 0 1px 0 rgba(255, 255, 255, 0.045);
+      --text-primary: #f4f4f6;
+      --text-secondary: #9ca3af;
+      --text-muted: #5c6270;
+      --accent: #6366f1;
+      --accent-glow: rgba(99, 102, 241, 0.18);
+      --emerald: #34d399;
+      --emerald-soft: rgba(52, 211, 153, 0.12);
+      --danger: #f43f5e;
+      --cta-bg: #f4f4f6;
+      --cta-fg: #09090b;
+    }
+
+    body.light {
+      --bg-canvas: #eef0f5;
+      --bg-window: #f9fafb;
+      --bg-card: #ffffff;
+      --bg-card-hover: #f3f4f6;
+      --bg-inset: #f1f3f7;
+      --border: rgba(15, 23, 42, 0.08);
+      --border-strong: rgba(15, 23, 42, 0.15);
+      --sheen: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+      --text-primary: #111827;
+      --text-secondary: #4b5563;
+      --text-muted: #9ca3af;
+      --accent: #4f46e5;
+      --accent-glow: rgba(79, 70, 229, 0.12);
+      --emerald: #10b981;
+      --emerald-soft: rgba(16, 185, 129, 0.12);
+      --cta-bg: #111827;
+      --cta-fg: #ffffff;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
+      background: var(--bg-canvas);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+      gap: 14px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Prototype Controls */
+    .proto-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      font-size: 11.5px;
+      color: var(--text-muted);
+    }
+
+    .proto-chip {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      padding: 5px 11px;
+      border-radius: 999px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .proto-chip:hover {
+      border-color: var(--border-strong);
+      color: var(--text-primary);
+    }
+
+    .proto-chip.active {
+      background: var(--accent-glow);
+      border-color: rgba(99, 102, 241, 0.45);
+      color: var(--text-primary);
+    }
+
+    /* Window Shell */
+    .window {
+      width: 100%;
+      max-width: 440px;
+      background:
+        radial-gradient(120% 45% at 50% 0%, rgba(99, 102, 241, 0.09) 0%, transparent 70%),
+        var(--bg-window);
+      border: 1px solid var(--border-strong);
+      border-radius: 18px;
+      box-shadow:
+        0 30px 70px rgba(0, 0, 0, 0.65),
+        var(--sheen);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    body.light .window {
+      box-shadow: 0 20px 50px rgba(15, 23, 42, 0.12);
+    }
+
+    .titlebar {
+      height: 38px;
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      font-size: 11.5px;
+      font-weight: 500;
+      color: var(--text-muted);
+      user-select: none;
+    }
+
+    .titlebar-dots {
+      display: flex;
+      gap: 14px;
+      font-size: 11px;
+    }
+
+    .content {
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Top Header */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .brand h1 {
+      font-size: 15.5px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    .brand p {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .env-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .env-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 4px 8px;
+      border-radius: 7px;
+    }
+
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--emerald);
+      box-shadow: 0 0 8px rgba(52, 211, 153, 0.6);
+    }
+
+    /* Section Label */
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 7px;
+      padding: 0 2px;
+    }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .section-link {
+      font-size: 11.5px;
+      color: var(--text-secondary);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 2px 4px;
+      border-radius: 5px;
+      transition: color 0.15s ease;
+    }
+
+    .section-link:hover {
+      color: var(--text-primary);
+    }
+
+    /* Surface Group */
+    .group {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: var(--sheen);
+      overflow: hidden;
+    }
+
+    /* Device Hero */
+    .device-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 13px 14px;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+
+    .device-row:hover {
+      background: var(--bg-card-hover);
+    }
+
+    .device-left {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      min-width: 0;
+    }
+
+    .phone-icon {
+      width: 52px;
+      height: 38px;
+      border-radius: 10px;
+      background: var(--accent-glow);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: #a5b4fc;
+      padding: 0 6px;
+    }
+
+    body.light .phone-icon {
+      color: var(--accent);
+    }
+
+    body.light .phone-icon img.mono {
+      filter: invert(1);
+    }
+
+    .device-meta {
+      min-width: 0;
+    }
+
+    .device-name {
+      font-size: 13.5px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .device-sub {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .pill-ready {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--emerald);
+      background: var(--emerald-soft);
+      padding: 3px 9px;
+      border-radius: 999px;
+      flex-shrink: 0;
+    }
+
+    .device-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 9px 12px;
+      border-top: 1px solid var(--border);
+      background: rgba(0, 0, 0, 0.14);
+      gap: 8px;
+    }
+
+    body.light .device-toolbar {
+      background: var(--bg-inset);
+    }
+
+    .mini-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .btn-mini {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      font-size: 11.5px;
+      font-weight: 500;
+      padding: 5px 10px;
+      border-radius: 7px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .btn-mini:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-strong);
+      color: var(--text-primary);
+    }
+
+    .btn-mini.active {
+      background: var(--accent-glow);
+      border-color: rgba(99, 102, 241, 0.45);
+      color: var(--text-primary);
+    }
+
+    /* Empty Guide */
+    .empty-box {
+      padding: 14px;
+      font-size: 12px;
+      line-height: 1.6;
+      color: var(--text-secondary);
+    }
+
+    .empty-box strong {
+      display: block;
+      color: var(--text-primary);
+      font-size: 12.5px;
+      margin-bottom: 4px;
+    }
+
+    /* Collapsible Wi-Fi Drawer */
+    .wifi-drawer {
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+      padding: 12px 14px;
+      border-top: 1px solid var(--border);
+      background: var(--bg-inset);
+    }
+
+    .wifi-drawer.open {
+      display: flex;
+    }
+
+    .wifi-input-row {
+      display: flex;
+      gap: 7px;
+    }
+
+    .input {
+      flex: 1;
+      min-width: 0;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 7px 10px;
+      font-size: 12px;
+      color: var(--text-primary);
+      outline: none;
+    }
+
+    .input:focus {
+      border-color: var(--accent);
+    }
+
+    .tutorial-text {
+      font-size: 11.5px;
+      line-height: 1.55;
+      color: var(--text-muted);
+    }
+
+    .tutorial-text b {
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    /* Segmented Quality */
+    .segmented-wrap {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .segmented {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      background: var(--bg-inset);
+      padding: 3px;
+      border-radius: 9px;
+      border: 1px solid var(--border);
+      gap: 3px;
+    }
+
+    .seg-btn {
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 11.8px;
+      font-weight: 500;
+      padding: 6px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .seg-btn:hover {
+      color: var(--text-secondary);
+    }
+
+    .seg-btn.active {
+      background: var(--bg-card-hover);
+      color: var(--text-primary);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35), var(--sheen);
+    }
+
+    /* Settings List */
+    .setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.12s ease;
+    }
+
+    .setting-row:last-child {
+      border-bottom: none;
+    }
+
+    .setting-row:hover {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .setting-title {
+      font-size: 12.6px;
+      color: var(--text-primary);
+    }
+
+    .setting-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 1px;
+    }
+
+    .toggle {
+      width: 34px;
+      height: 19px;
+      border-radius: 999px;
+      background: var(--bg-inset);
+      border: 1px solid var(--border-strong);
+      position: relative;
+      flex-shrink: 0;
+      transition: all 0.18s ease;
+    }
+
+    .toggle::after {
+      content: "";
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      background: var(--text-muted);
+      transition: all 0.18s ease;
+    }
+
+    .toggle.on {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .toggle.on::after {
+      transform: translateX(15px);
+      background: #ffffff;
+    }
+
+    /* Footer */
+    .footer {
+      padding: 12px 16px;
+      border-top: 1px solid var(--border);
+      background: var(--bg-card);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .status-text {
+      min-width: 0;
+      font-size: 11.8px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .cta {
+      flex-shrink: 0;
+      border: none;
+      background: var(--cta-bg);
+      color: var(--cta-fg);
+      font-size: 12.5px;
+      font-weight: 600;
+      padding: 8px 16px;
+      border-radius: 9px;
+      cursor: pointer;
+      transition: transform 0.1s ease, opacity 0.15s ease;
+    }
+
+    .cta:hover {
+      opacity: 0.92;
+    }
+
+    .cta:active {
+      transform: scale(0.98);
+    }
+
+    .cta.running {
+      background: var(--danger);
+      color: #ffffff;
+    }
+  </style>
+</head>
+<body>
+  <div class="proto-bar">
+    <span>Preview:</span>
+    <button class="proto-chip active" onclick="setScenario('realme', this)">realme</button>
+    <button class="proto-chip" onclick="setScenario('poco', this)">POCO</button>
+    <button class="proto-chip" onclick="setScenario('samsung', this)">Samsung</button>
+    <button class="proto-chip" onclick="setScenario('xiaomi', this)">Xiaomi</button>
+    <button class="proto-chip" onclick="setScenario('oppo', this)">OPPO</button>
+    <button class="proto-chip" onclick="setScenario('google', this)">Google</button>
+    <button class="proto-chip" onclick="setScenario('empty', this)">Belum Ada HP</button>
+    <button class="proto-chip" onclick="toggleTheme(this)">Light / Dark</button>
+  </div>
+
+  <div class="window">
+    <div class="titlebar">
+      <span>Android Mirror</span>
+      <div class="titlebar-dots"><span>—</span><span>□</span><span>✕</span></div>
+    </div>
+
+    <div class="content">
+      <!-- Header -->
+      <div class="header">
+        <div class="brand">
+          <h1>Android Mirror</h1>
+          <p>Simple setup untuk Windows 10</p>
+        </div>
+        <div class="env-status">
+          <span class="env-pill"><span class="dot"></span>ADB</span>
+          <span class="env-pill"><span class="dot"></span>scrcpy</span>
+        </div>
+      </div>
+
+      <!-- Device Section -->
+      <div>
+        <div class="section-head">
+          <span class="section-label">Perangkat</span>
+          <button class="section-link" onclick="setStatus('Daftar perangkat diperbarui.')">↻ Refresh</button>
+        </div>
+
+        <div class="group">
+          <div id="device-area"></div>
+
+          <div class="device-toolbar">
+            <div class="mini-actions">
+              <button class="btn-mini" onclick="setStatus('Mode Wi-Fi aktif (192.168.1.15:5555). Kabel boleh dicabut.')">Pindah ke Wi-Fi</button>
+              <button class="btn-mini" id="wifi-toggle-btn" onclick="toggleWifiDrawer()">Manual IP / Tutorial</button>
+            </div>
+          </div>
+
+          <div class="wifi-drawer" id="wifi-drawer">
+            <div class="wifi-input-row">
+              <input class="input" id="wifi-input" placeholder="Masukkan IP:Port (mis. 192.168.1.15:5555)" />
+              <button class="btn-mini" onclick="connectManual()">Connect</button>
+            </div>
+            <div class="tutorial-text">
+              <b>Via USB dulu:</b> Colok USB lalu klik <i>Pindah ke Wi-Fi</i>.<br />
+              <b>Tanpa kabel (Android 11+):</b> Buka <i>Opsi Pengembang &gt; Wireless Debugging</i>, masukkan IP &amp; Port di atas lalu klik <i>Connect</i>.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Settings Section -->
+      <div>
+        <div class="section-head">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span class="section-label">Pengaturan</span>
+            <button class="section-link" id="tips-toggle-btn" onclick="toggleTips()" style="color:var(--accent);">Tips Lockscreen</button>
+          </div>
+          <span class="section-label" id="quality-meta" style="text-transform:none; letter-spacing:0;">1080p • 60 fps</span>
+        </div>
+
+        <div class="group">
+          <div class="segmented-wrap">
+            <div class="segmented">
+              <button class="seg-btn" onclick="setQuality(0, this)">Ringan</button>
+              <button class="seg-btn active" onclick="setQuality(1, this)">Seimbang</button>
+              <button class="seg-btn" onclick="setQuality(2, this)">Tajam</button>
+            </div>
+          </div>
+
+          <div class="setting-row" onclick="toggleSwitch(this)">
+            <div>
+              <div class="setting-title">Matikan layar HP</div>
+              <div class="setting-desc">Layar fisik gelap, tetap bisa dikontrol dari PC</div>
+            </div>
+            <div class="toggle on"></div>
+          </div>
+
+          <div class="setting-row" onclick="toggleSwitch(this)">
+            <div class="setting-title">Jaga HP tetap menyala</div>
+            <div class="toggle on"></div>
+          </div>
+
+          <div class="setting-row" onclick="toggleSwitch(this)">
+            <div class="setting-title">Selalu di atas (Always on top)</div>
+            <div class="toggle"></div>
+          </div>
+
+          <div class="setting-row" onclick="toggleSwitch(this)">
+            <div class="setting-title">Teruskan audio HP ke PC</div>
+            <div class="toggle on"></div>
+          </div>
+
+          <div class="wifi-drawer open" id="tips-drawer">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <strong style="font-size:12px;color:var(--text-primary);">Tips Lockscreen &amp; Layar Mati</strong>
+              <button class="btn-mini" onclick="closeTips()">Mengerti, Tutup</button>
+            </div>
+            <div class="tutorial-text">
+              • <b>Layar hitam saat Lockscreen:</b> Proteksi sistem Android (<i>FLAG_SECURE</i>). Tekan <i>Spasi</i> &gt; ketik PIN HP di keyboard PC &gt; <i>Enter</i> untuk buka kunci.<br />
+              • <b>Jangan tekan Power HP:</b> Pakai <i>Matikan layar HP</i> (atau <i>Alt + O</i> di jendela mirror) agar layar gelap tanpa mengunci HP.<br />
+              • <b>realme / OPPO / Xiaomi:</b> Aktifkan <i>Disable permission monitoring</i> atau <i>USB Debugging (Security Settings)</i> di Opsi Pengembang.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div class="status-text" id="status-text">Siap mirroring • RMX3630 (Wi-Fi)</div>
+      <button class="cta" id="cta-btn" onclick="toggleMirror()">Mulai Mirroring</button>
+    </div>
+  </div>
+
+  <script>
+    let isRunning = false;
+    let scenario = "realme";
+
+    const BRANDS = {
+      realme: {
+        name: "realme 10 Pro (RMX3630)",
+        sub: "Wi-Fi • adb-EXAMPLE123._adb-tls-connect._tcp",
+        bg: "rgba(255, 201, 21, 0.14)",
+        border: "rgba(255, 201, 21, 0.35)",
+        svg: "../assets/brands/realme.svg",
+        mono: false
+      },
+      poco: {
+        name: "POCO F5 (23049PCD8G)",
+        sub: "USB • 8A2B3C4D5E",
+        bg: "rgba(255, 212, 0, 0.12)",
+        border: "rgba(255, 212, 0, 0.35)",
+        svg: "../assets/brands/poco.svg",
+        mono: false
+      },
+      samsung: {
+        name: "Galaxy S24 (SM-S921B)",
+        sub: "USB • R5CX123456A",
+        bg: "rgba(96, 165, 250, 0.14)",
+        border: "rgba(96, 165, 250, 0.35)",
+        svg: "../assets/brands/samsung.svg",
+        mono: true
+      },
+      xiaomi: {
+        name: "Xiaomi 14 (23127PN0CG)",
+        sub: "Wi-Fi • 192.168.1.22:5555",
+        bg: "rgba(255, 133, 51, 0.14)",
+        border: "rgba(255, 133, 51, 0.35)",
+        svg: "../assets/brands/xiaomi.svg",
+        mono: true
+      },
+      oppo: {
+        name: "OPPO Reno 11 (CPH2599)",
+        sub: "USB • A7B9C12345",
+        bg: "rgba(52, 211, 153, 0.14)",
+        border: "rgba(52, 211, 153, 0.35)",
+        svg: "../assets/brands/oppo.svg",
+        mono: true
+      },
+      google: {
+        name: "Pixel 8 Pro",
+        sub: "Wi-Fi • 192.168.1.30:5555",
+        bg: "rgba(165, 180, 252, 0.14)",
+        border: "rgba(165, 180, 252, 0.35)",
+        svg: "../assets/brands/google.svg",
+        mono: true
+      }
+    };
+
+    function renderDevices() {
+      const area = document.getElementById("device-area");
+      if (scenario !== "empty") {
+        const b = BRANDS[scenario] || BRANDS.realme;
+        const cls = b.mono ? "mono" : "";
+        area.innerHTML = `
+          <div class="device-row">
+            <div class="device-left">
+              <div class="phone-icon" style="background:${b.bg};border-color:${b.border};">
+                <img class="${cls}" src="${b.svg}" style="width:38px;height:24px;object-fit:contain;display:block;border-radius:4px;" alt="${scenario}" />
+              </div>
+              <div class="device-meta">
+                <div class="device-name">${b.name}</div>
+                <div class="device-sub">${b.sub}</div>
+              </div>
+            </div>
+            <span class="pill-ready">Siap</span>
+          </div>`;
+      } else {
+        area.innerHTML = `
+          <div class="empty-box">
+            <strong>Belum ada HP terdeteksi</strong>
+            1. Aktifkan <em>Opsi Pengembang</em> &amp; <em>USB Debugging</em> di HP.<br/>
+            2. Colok USB ke PC lalu klik <em>Izinkan</em> di layar HP.
+          </div>`;
+      }
+    }
+
+    function setScenario(s, btn) {
+      scenario = s;
+      document.querySelectorAll(".proto-chip").forEach((b, i) => {
+        if (i < 7) b.classList.remove("active");
+      });
+      btn.classList.add("active");
+      renderDevices();
+      const b = BRANDS[s];
+      setStatus(b ? `Siap mirroring • ${b.name}` : "Hubungkan HP Android lewat USB atau Wi-Fi.");
+    }
+
+    function toggleTheme(btn) {
+      document.body.classList.toggle("light");
+      btn.classList.toggle("active");
+    }
+
+    function toggleWifiDrawer() {
+      const drawer = document.getElementById("wifi-drawer");
+      const btn = document.getElementById("wifi-toggle-btn");
+      drawer.classList.toggle("open");
+      btn.classList.toggle("active");
+    }
+
+    function toggleTips() {
+      const drawer = document.getElementById("tips-drawer");
+      const btn = document.getElementById("tips-toggle-btn");
+      const open = drawer.classList.toggle("open");
+      btn.textContent = open ? "Tutup Tips" : "Tips Lockscreen";
+    }
+
+    function closeTips() {
+      document.getElementById("tips-drawer").classList.remove("open");
+      document.getElementById("tips-toggle-btn").textContent = "Tips Lockscreen";
+    }
+
+    function setQuality(idx, btn) {
+      document.querySelectorAll(".seg-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      const labels = ["720p • 30 fps", "1080p • 60 fps", "Native • 60 fps"];
+      document.getElementById("quality-meta").textContent = labels[idx];
+    }
+
+    function toggleSwitch(row) {
+      row.querySelector(".toggle").classList.toggle("on");
+    }
+
+    function connectManual() {
+      const val = document.getElementById("wifi-input").value.trim() || "192.168.1.15:5555";
+      setStatus("Menghubungkan ke " + val + "...");
+    }
+
+    function toggleMirror() {
+      isRunning = !isRunning;
+      const btn = document.getElementById("cta-btn");
+      if (isRunning) {
+        btn.textContent = "Stop Mirroring";
+        btn.classList.add("running");
+        setStatus("Mirroring aktif • RMX3630 (layar HP mati)");
+      } else {
+        btn.textContent = "Mulai Mirroring";
+        btn.classList.remove("running");
+        setStatus("Mirroring dihentikan.");
+      }
+    }
+
+    function setStatus(msg) {
+      document.getElementById("status-text").textContent = msg;
+    }
+
+    renderDevices();
+  </script>
+</body>
+</html>

@@ -1,0 +1,90 @@
+name: Release Multiplatform
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag (e.g. v0.1.0)"
+        required: true
+        default: "v0.1.0"
+
+permissions:
+  contents: write
+
+jobs:
+  build-release:
+    name: Package (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            target: windows-x86_64
+            bin_name: android-mirror-app.exe
+            archive_ext: zip
+          - os: ubuntu-latest
+            target: linux-x86_64
+            bin_name: android-mirror-app
+            archive_ext: tar.gz
+          - os: macos-latest
+            target: macos-arm64
+            bin_name: android-mirror-app
+            archive_ext: tar.gz
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Cargo registry & target
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: release-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Install Linux build dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pkg-config libxkbcommon-dev libwayland-dev libgl1-mesa-dev libvulkan1
+
+      - name: Build release binary
+        run: cargo build --release
+
+      - name: Package Windows archive
+        if: matrix.archive_ext == 'zip'
+        shell: pwsh
+        run: |
+          $tag = if ("${{ inputs.tag }}" -ne "") { "${{ inputs.tag }}" } else { "${{ github.ref_name }}" }
+          $dir = "dist/android-mirror-$tag-${{ matrix.target }}"
+          New-Item -ItemType Directory -Force -Path $dir | Out-Null
+          Copy-Item "target/release/${{ matrix.bin_name }}" "$dir/"
+          Copy-Item "README.md", "LICENSE" "$dir/"
+          Compress-Archive -Path "$dir/*" -DestinationPath "android-mirror-$tag-${{ matrix.target }}.zip" -Force
+
+      - name: Package Unix archive
+        if: matrix.archive_ext == 'tar.gz'
+        shell: bash
+        run: |
+          TAG="${{ inputs.tag }}"
+          if [ -z "$TAG" ]; then TAG="${{ github.ref_name }}"; fi
+          PKG="android-mirror-$TAG-${{ matrix.target }}"
+          mkdir -p "dist/$PKG"
+          cp "target/release/${{ matrix.bin_name }}" "dist/$PKG/"
+          chmod +x "dist/$PKG/${{ matrix.bin_name }}"
+          cp README.md LICENSE "dist/$PKG/"
+          tar -czf "$PKG.tar.gz" -C "dist" "$PKG"
+
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.tag || github.ref_name }}
+          files: |
+            android-mirror-*.zip
+            android-mirror-*.tar.gz

@@ -10,11 +10,14 @@ Desktop GUI application for displaying and controlling Android screens over ADB 
 
 > Note: The application UI itself is currently in Indonesian. Exact UI labels appear in bold alongside their English explanations below.
 
-## Quick start (Windows)
+## Quick start
 
-Download `android-mirror-v0.1.0-windows-x86_64.zip` from [Releases](https://github.com/aqky29/android-mirror/releases), extract the zip archive, and run `android-mirror-app.exe`.
+Download the archive for your operating system from [Releases](https://github.com/aqky29/android-mirror/releases):
+- Windows 10/11 (`x86_64`): extract `android-mirror-v0.1.0-windows-x86_64.zip` and run `android-mirror-app.exe`.
+- Linux (`x86_64`): extract `android-mirror-v0.1.0-linux-x86_64.tar.gz` and run `./android-mirror-app`.
+- macOS (`arm64`): extract `android-mirror-v0.1.0-macos-arm64.tar.gz` and run `./android-mirror-app`.
 
-If `scrcpy` or `adb` is not installed on your computer yet, click **Install scrcpy** inside the app window. On Linux and macOS, compile from source using the steps under [Build from source](#build-from-source).
+If `scrcpy` or `adb` is not installed on your computer yet, click **Install scrcpy** inside the app window. For other architectures or manual builds, follow [Build from source](#build-from-source).
 
 ## Features and behavior
 

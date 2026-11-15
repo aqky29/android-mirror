@@ -8,11 +8,14 @@ Aplikasi desktop untuk menampilkan dan mengontrol layar Android lewat ADB dan sc
   <img src="docs/preview.png" alt="Tampilan antarmuka Android Mirror" width="460" />
 </p>
 
-## Cara cepat memakai (Windows)
+## Cara cepat memakai
 
-Unduh `android-mirror-v0.1.0-windows-x86_64.zip` dari halaman [Releases](https://github.com/aqky29/android-mirror/releases), ekstrak arsipnya, lalu jalankan `android-mirror-app.exe`.
+Unduh arsip rilis dari halaman [Releases](https://github.com/aqky29/android-mirror/releases) sesuai sistem operasi Anda:
+- Windows 10/11 (`x86_64`): ekstrak `android-mirror-v0.1.0-windows-x86_64.zip`, lalu jalankan `android-mirror-app.exe`.
+- Linux (`x86_64`): ekstrak `android-mirror-v0.1.0-linux-x86_64.tar.gz`, lalu jalankan `./android-mirror-app`.
+- macOS (`arm64`): ekstrak `android-mirror-v0.1.0-macos-arm64.tar.gz`, lalu jalankan `./android-mirror-app`.
 
-Jika `scrcpy` atau `adb` belum ada di komputer Anda, klik **Install scrcpy** pada jendela aplikasi. Pengguna Linux dan macOS dapat mengompilasi aplikasi dari kode sumber lewat langkah pada bagian [Build dari source](#build-dari-source).
+Jika `scrcpy` atau `adb` belum ada di komputer Anda, klik **Install scrcpy** pada jendela aplikasi. Untuk arsitektur lain atau jika ingin kompilasi mandiri, ikuti langkah pada bagian [Build dari source](#build-dari-source).
 
 ## Fitur dan perilaku aplikasi
 

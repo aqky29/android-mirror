@@ -65,7 +65,7 @@ jobs:
           $dir = "dist/android-mirror-$tag-${{ matrix.target }}"
           New-Item -ItemType Directory -Force -Path $dir | Out-Null
           Copy-Item "target/release/${{ matrix.bin_name }}" "$dir/"
-          Copy-Item "README.md", "LICENSE" "$dir/"
+          Copy-Item "README.md", "README.en.md", "LICENSE" "$dir/"
           Compress-Archive -Path "$dir/*" -DestinationPath "android-mirror-$tag-${{ matrix.target }}.zip" -Force
 
       - name: Package Unix archive
@@ -78,13 +78,44 @@ jobs:
           mkdir -p "dist/$PKG"
           cp "target/release/${{ matrix.bin_name }}" "dist/$PKG/"
           chmod +x "dist/$PKG/${{ matrix.bin_name }}"
-          cp README.md LICENSE "dist/$PKG/"
+          cp README.md README.en.md LICENSE "dist/$PKG/"
           tar -czf "$PKG.tar.gz" -C "dist" "$PKG"
+
+      - name: Upload packaged archive artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.target }}
+          path: |
+            android-mirror-*.zip
+            android-mirror-*.tar.gz
+          if-no-files-found: error
+
+  publish:
+    name: Publish GitHub Release
+    needs: build-release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download packaged archives
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          merge-multiple: true
 
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ inputs.tag || github.ref_name }}
+          target_commitish: ${{ github.sha }}
+          name: Android Mirror ${{ inputs.tag || github.ref_name }}
+          body: |
+            Tampilkan dan kontrol layar Android di Windows, Linux, dan macOS lewat USB maupun Wi-Fi menggunakan ADB dan scrcpy.
+
+            ### Unduh & jalankan
+            - **Windows 10/11 (`x86_64`):** Unduh `android-mirror-${{ inputs.tag || github.ref_name }}-windows-x86_64.zip`, ekstrak arsip ZIP tersebut, lalu jalankan `android-mirror-app.exe`.
+            - **Linux (`x86_64`):** Unduh `android-mirror-${{ inputs.tag || github.ref_name }}-linux-x86_64.tar.gz`, ekstrak, lalu jalankan `./android-mirror-app`.
+            - **macOS (`arm64`):** Unduh `android-mirror-${{ inputs.tag || github.ref_name }}-macos-arm64.tar.gz`, ekstrak, lalu jalankan `./android-mirror-app`.
+
+            Klik **Install scrcpy** pada jendela aplikasi jika Anda belum memasang `scrcpy` atau `adb`. Pengguna arsitektur lain dapat mem-build dari source lewat `cargo build --release` sesuai petunjuk di [README](https://github.com/aqky29/android-mirror#readme) atau [English README](https://github.com/aqky29/android-mirror/blob/main/README.en.md).
           files: |
-            android-mirror-*.zip
-            android-mirror-*.tar.gz
+            release-assets/*.zip
+            release-assets/*.tar.gz
